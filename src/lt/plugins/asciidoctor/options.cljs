@@ -16,13 +16,20 @@
 (def ^:private capital-kw (comp keyword string/capitalize name))
 (def ^:private lower-kw (comp keyword string/lower-case name))
 
+(def doctypes
+  #{[:book "document type allows multiple level-0 section titles in a single document"]
+    [:article "default doctype is article"]
+    [:inline "allows the content of a single paragraph to be formatted and returned without wrapping it in a containing element"]
+    [:manpage "enables parsing of metadata necessary to produce a manpage"]
+    })
 
 (defn variant-ks
-  "Takes a sequence of keywords and will return a list of variations on those keywords
-  in the forms: upper-case, capitalized and lower-case keywords e.g.
-  (variant-ks [:foo :bar :baz]) ;=> (:FOO :Foo :foo :BAR :Bar :bar :BAZ :Baz :baz)"
+  "Takes a sequence of keywords and returns a list of variations on the casing
+  of those keywords. Returns lower-, upper-case and capitalized variations."
   [s] (flatten (map (juxt upper-kw capital-kw lower-kw) s)))
 
+;; (= '(:FOO :Foo :foo :BAR :Bar :bar :BAZ :Baz :baz)
+;;    (variant-ks [:foo :bar :baz]))
 
 (defn dichotomies
   "Handles some common dichotomies and their variations. Allows for both keywords and
@@ -43,10 +50,47 @@
         false
         nil))))
 
-;; (dichotomies 1) ;=> true
-;; (dichotomies "Enabled") ;=> true
-;; (dichotomies "OFF") ;=> false
-;; (dichotomies :Disabled) ;=> false
+;; (def util-inspect
+;;   (.-inspect (js/require "util")))
+
+;; (defn inspect [thing depth]
+;;   (util-inspect thing false (or depth 5)))
+
+(defn cl-enum
+  "Poor man's emulation of cl-format natural language enumeration
+  of sequences. Defaults to 'and', using :conjoin e.g. 'or' is possible."
+  [s &{conjoin :conjoin :or {conjoin "and"}}]
+  (string/join (flatten (cons (drop-last (butlast (interpose ", " s)))
+                              (list (str " " conjoin " ") (last s))))))
+
+;; (true?
+;;  (and
+;;   (= "one, two and three"
+;;      (cl-enum ["one" "two" "three"]))
+;;   (= "one, two or three"
+;;      (cl-enum ["one" "two" "three"] :conjoin "or"))))
+
+
+(defn opal-hash
+  "Takes optional arguments :doctype and :attributes and passes them to
+  the Opal.hash2 internal function to create a map consumable by asciidoctor."
+  [& {doctype :doctype attributes :attributes
+      :or {doctype "article" attributes ["showtitle"]}}]
+  (let [dt (if (some #{(keyword doctype)} (keys doctypes)) doctype
+             (throw (js/Error. (str "Not a valid doctype. Require one of "
+                                    (cl-enum (map name (keys doctypes)) :conjoin "or")))))
+        am {:doctype dt :attributes (apply array attributes)}]
+    (Opal.hash2 (clj->js (keys am))
+                (clj->js am))))
+
+(opal-hash :doctype "book" :attributes [":!numbered:"])
+
+
+;;   (Opal.hash2 (clj->js (keys opt-map))
+;;               (clj->js {:doctype "book" :attributes (array attributes)})))
+
+;; (= (every? true? (map dichotomies [:true :1 1 :Yes :TRUE :enabled :Enabled :ON]))
+;;    (every? false? (map dichotomies [:off :0 0 :NO :False :disabled :no])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; predicates
