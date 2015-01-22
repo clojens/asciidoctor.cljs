@@ -1,0 +1,30 @@
+{
+  "name": "Asciidoctor.cljs",
+  "version": "0.1.0",
+  "authors": [
+    "Rob Jentzema <rob.jentzema@gmail.com>"
+  ],
+  "description": "Asciidoctor.js to ClojureScript Light Table IDE",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "lt",
+    "ide",
+    "cljs",
+    "adoc"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "asciidoctor.js": "~1.5.2"
+  }
+}

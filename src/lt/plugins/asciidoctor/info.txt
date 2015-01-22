@@ -1,0 +1,59 @@
+  (ns lt.plugins.asciidoctor.info
+  (:require [lt.object :as object]
+            [lt.objs.app :as app]
+            [lt.util.dom :as dom]
+            [lt.objs.editor.pool :as pool] ; pool of editors
+            [lt.objs.document :as doc] ; the documents
+            [lt.objs.find :as finds] ; find current-ed
+            [lt.util.load :as load] ; used to execute content
+            [lt.objs.files :as files] ; file system ops
+            [lt.objs.editor :as editor]
+            [lt.objs.plugins :as plugins] ; plugin system
+            [lt.objs.tabs :as tabs]
+            [lt.objs.clients.local :as local] ; local ui connection
+            [lt.objs.command :as cmd]
+            [clojure.string :as string])
+  (:require-macros [lt.macros :refer [defui behavior]]))
+
+;; keep this? as it isn't really dynamic... effective though
+(def *ns* (namespace ::x))
+
+(def normalized-name
+  "Return the most probable name of this plugin."
+  (string/capitalize (first (string/split (string/replace *ns* "lt.plugins." "") "."))))
+
+;; helpers
+(def encapsulate #(str %2 (string/join %1) %3))
+(def abbreviate #(-> % (string/split "_") first keyword))
+(def vectorize (comp #(apply vector %) flatten))
+(def ->pred (comp keyword #(str % "?") name))
+
+(def this-plugin
+  "Self-referencing hash-map which contains some common used data elements."
+  (letfn [(tp [& ks] (get-in this-plugin (apply vector ks)))
+          (pp [& parts] (mapv #(files/join (tp :path) %) parts))
+          ;; named directory predicates = ndp
+          (ndp [] (into {} (map #(hash-map ((comp ->pred abbreviate) %)
+                                           (files/exists? (first (pp %))))
+                                (tp :list :own :named :dirs))))
+          (mk-pattern [] (-> (interpose "|" (map name (tp :exts)))
+                             (encapsulate ".*(" ")")
+                             re-pattern))
+          ]
+    {:name normalized-name
+     :path (plugins/find-plugin (tp :name))
+     :type (get (:types @files/files-obj) (tp :name))
+     :exts (tp :type :exts)
+     :mime (tp :type :mime)
+     :pattern {:file {:extensions (mk-pattern)}}
+     :list {:own {:named {:dirs ["node_modules" "bower_components" "doc" "resources" "target" ]}}}
+     :has (ndp)
+     :find (fn [& ks] (get-in this-plugin (apply vector ks)))
+     }))
+
+(defn has
+  "Returns true or false on predicate verb (has :kw?)"
+  [& pk] (get-in this-plugin
+                 (vectorize (cons [:has] pk))))
+
+;; (has :node?)

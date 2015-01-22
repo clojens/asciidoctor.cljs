@@ -1,0 +1,15 @@
+{
+  "name": "Asciidoctor",
+  "version": "0.1.0",
+  "description": "",
+  "main": "asciidoctor_compiled.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Rob Jentzema <rob.jentzema@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "init-package-json": "^1.1.3"
+  }
+}

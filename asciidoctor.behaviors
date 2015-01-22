@@ -1,0 +1,19 @@
+[
+ ;; Add syntax highlighting for historic asciidoc format.
+ [:app :lt.objs.plugins/load-js ["asciidoctor_compiled.js"
+                                 "codemirror/asciidoc.js"]]
+
+ ;; Decided upon generic name Asciidoctor since we'll be using that
+ ;; in plugin name, folder etc saves a bit of code and confusion.
+ ;; Extensions are historic though and so is the highlighter it does
+ ;; not currently interpret asciidoctor special forms, only historic.
+ [:editor :lt.objs.files/file-types [{:name "Asciidoctor"
+                                      :exts [:asciidoc :ad :adoc]
+                                      :mime "text/x-asciidoc"
+                                      :tags [:editor.asciidoctor]}]]
+
+ [:ad.pane :lt.plugins.asciidoctor.util/plugin "Asciidoctor"]
+ [:ad.pane :lt.plugins.asciidoctor.util/on-close-destroy]
+ [:ad.pane :lt.plugins.asciidoctor.util/set-default-css "foo"]
+ [:editor.asciidoctor :lt.plugins.asciidoctor.util/init-doctype-selector]
+ ]
